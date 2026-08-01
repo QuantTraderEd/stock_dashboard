@@ -1,3 +1,5 @@
+import os
+
 import requests
 import pandas as pd
 from fake_useragent import UserAgent
@@ -5,13 +7,14 @@ from bs4 import BeautifulSoup
 
 # 분석할 종목 리스트
 TICKERS = [
-    "NVDA", "AAPL", "MSFT", "GOOG", "AMZN", "META", "TSLA", "TSM", "AVGO",
-    "ORCL", "NFLX", "PLTR", "ADBE", "NOW", "CRM", "APP", "SNOW", "DDOG", "NET",
-    "AMD", "MU", "INTC", "SNDK",
+    "NVDA", "AAPL", "MSFT", "GOOG", "AMZN", "META", "SPCX", "TSLA", "TSM", "AVGO",
+    "ORCL", "NFLX", "PLTR", "CRWD", "ADBE", "NOW", "CRM", "APP", "SNOW", "DDOG", "NET",
+    "AMD", "SKHY", "MU", "INTC", "SNDK",
     "ASML", "AMAT", "LRCX", "KLAC",
     "QCOM", "ARM", "MRVL",
     "HOOD", "COIN",
     "GLW", "COHR", "LITE",
+    "RKLB", "ASTS", "PL",
 ]
 
 # 추출할 항목들 (Finviz 페이지 내 snapshot 테이블에 표시되는 이름과 동일해야 함)
@@ -107,7 +110,12 @@ def main():
     )
 
     print(df.to_markdown(index=False))
+    
+    # Ensure data directory exists
+    os.makedirs('./data', exist_ok=True)
+    
     df.to_csv('./data/finviz_valuation_data.csv', index=False, sep="|")
+    df.to_markdown('./data/finviz_valuation_data.md', index=False)
 
 
 if __name__ == "__main__":
