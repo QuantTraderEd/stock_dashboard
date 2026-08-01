@@ -19,7 +19,7 @@ TICKERS = [
 
 # 추출할 항목들 (Finviz 페이지 내 snapshot 테이블에 표시되는 이름과 동일해야 함)
 KEYS_TO_EXTRACT = [
-    "Price", "Market Cap", "Forward P/E",
+    "Price", "Market Cap", "P/E", "P/S", "P/B", "Forward P/E",
     "EPS (ttm)", "EPS this Y", "EPS next Y", "EPS next 5Y", "EPS past 3/5Y",
     "52W High", "52W Low", "RSI (14)",
     "Recom", "Target Price",
