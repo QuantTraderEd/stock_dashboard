@@ -1,0 +1,4 @@
+requests
+pandas
+fake-useragent
+beautifulsoup4
