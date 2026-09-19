@@ -13,6 +13,7 @@ TICKERS = [
     "ASML", "AMAT", "LRCX", "KLAC",
     "QCOM", "ARM", "MRVL",
     "HOOD", "COIN",
+    "TXN", "ADI", "MCHP",
     "GLW", "COHR", "LITE",
     "RKLB", "ASTS", "PL",
 ]
