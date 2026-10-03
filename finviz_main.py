@@ -1,4 +1,6 @@
 import os
+import random
+import time
 
 import requests
 import pandas as pd
@@ -27,15 +29,45 @@ KEYS_TO_EXTRACT = [
 ]
 
 
-def fetch_and_parse_stock_data(ticker, headers):
+REQUEST_DELAY = (2.0, 4.0)  # 요청 간 랜덤 대기(초)
+MAX_RETRIES = 4
+RETRYABLE_STATUS = {403, 429, 500, 502, 503, 504}
+
+
+def fetch_and_parse_stock_data(ticker, session, ua):
     """
     Fetches and parses stock data for a given ticker from Finviz.
+    Retries with exponential backoff when rate-limited or blocked.
     """
     url = f"https://finviz.com/quote.ashx?t={ticker}&p=d"
-    response = requests.get(url, headers=headers)
+    response = None
+    for attempt in range(MAX_RETRIES):
+        headers = {
+            "User-Agent": ua.random,
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Referer": "https://finviz.com/",
+        }
+        try:
+            response = session.get(url, headers=headers, timeout=30)
+        except requests.RequestException as e:
+            print(f"Request error for {ticker}: {e}")
+            response = None
+        else:
+            if response.status_code == 200:
+                break
+            if response.status_code not in RETRYABLE_STATUS:
+                break
 
-    if response.status_code != 200:
-        print(f"Failed to retrieve data for {ticker}")
+        if attempt < MAX_RETRIES - 1:
+            wait = 10 * (2 ** attempt) + random.uniform(0, 3)
+            status = response.status_code if response is not None else "error"
+            print(f"Retrying {ticker} in {wait:.0f}s (status: {status})")
+            time.sleep(wait)
+
+    if response is None or response.status_code != 200:
+        status = response.status_code if response is not None else "no response"
+        print(f"Failed to retrieve data for {ticker} (status: {status})")
         return None
 
     soup = BeautifulSoup(response.content, "html.parser")
@@ -82,16 +114,21 @@ def format_market_cap_to_billions(market_cap_numeric):
 
 def main():
     ua = UserAgent()
-    headers = {'User-Agent': ua.random}
+    session = requests.Session()
 
     data_list = []
-    for ticker in TICKERS:
-        data_dict = fetch_and_parse_stock_data(ticker, headers)
+    for i, ticker in enumerate(TICKERS):
+        if i > 0:
+            time.sleep(random.uniform(*REQUEST_DELAY))
+        data_dict = fetch_and_parse_stock_data(ticker, session, ua)
         if data_dict:
             row = {"Ticker": ticker}
             for key in KEYS_TO_EXTRACT:
                 row[key] = data_dict.get(key, "N/A")
             data_list.append(row)
+
+    if not data_list:
+        raise SystemExit("No data retrieved for any ticker")
 
     df = pd.DataFrame(data_list)
 
